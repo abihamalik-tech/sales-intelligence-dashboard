@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SALES INTELLIGENCE DASHBOARD</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+/* ── CALIBRI STACK ── */
+@font-face { font-family:'Calibri'; src:local('Calibri'),local('Calibri-Bold'); }
+
+:root {
+  --bg:       #000000;
+  --bg-card:  #0d0d0d;
+  --bg-panel: #111111;
+  --bg-row:   #161616;
+  --bg-hover: #1c1c1c;
+  --border:   rgba(255,255,255,0.10);
+  --border-hi:rgba(255,255,255,0.22);
+  --white:    #ffffff;
+  --dim:      #aaaaaa;
+  --muted:    #666666;
+  --green:    #00e676;
+  --green-d:  rgba(0,230,118,0.14);
+  --red:      #ff1744;
+  --red-d:    rgba(255,23,68,0.14);
+  --amber:    #ffab00;
+  --amber-d:  rgba(255,171,0,0.14);
+  --blue:     #448aff;
+  --blue-d:   rgba(68,138,255,0.14);
+  --sidebar-w:230px;
+  --sidebar-c:60px;
+  --hh:       54px;
+  --tr:       200ms ease;
+  --font:     'Calibri','Calibri Body','Segoe UI','Trebuchet MS',sans-serif;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+
+body{
+  font-family:var(--font);
+  font-weight:700;
+  background:var(--bg);
+  color:var(--white);
+  min-height:100vh;
+  display:flex;
+  overflow-x:hidden;
+}
+
+/* ──────────── SIDEBAR ──────────── */
+.sidebar{
+  width:var(--sidebar-w);
+  min-height:100vh;
+  background:#050505;
+  border-right:1px solid var(--border);
+  position:fixed;top:0;left:0;bottom:0;
+  z-index:200;
+  display:flex;flex-direction:column;
+  transition:width var(--tr);
+  overflow:hidden;
+}
+.sidebar.collapsed{width:var(--sidebar-c);}
+
+.sb-logo{
+  height:var(--hh);
+  display:flex;align-items:center;
+  padding:0 16px;gap:10px;
+  border-bottom:1px solid var(--border);
+  white-space:nowrap;flex-shrink:0;
+}
+.sb-mark{
+  width:30px;height:30px;flex-shrink:0;
+  background:var(--green);
+  border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font);font-weight:700;font-size:13px;
+  color:#000;letter-spacing:-0.5px;
+}
+.sb-brand{
+  font-family:var(--font);font-weight:700;font-size:13px;
+  color:var(--white);letter-spacing:1px;text-transform:uppercase;
+  opacity:1;transition:opacity var(--tr);
+}
+.sidebar.collapsed .sb-brand{opacity:0;}
+
+.sb-toggle{
+  position:absolute;top:14px;right:-12px;
+  width:24px;height:24px;
+  background:#111;border:1px solid var(--border);
+  border-radius:50%;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--dim);font-size:10px;font-weight:700;
+  transition:all var(--tr);z-index:10;
+}
+.sb-toggle:hover{background:var(--green);color:#000;border-color:var(--green);}
+
+.nav-sec{padding:18px 0 8px;flex:1;overflow-y:auto;}
+.nav-grp-label{
+  font-family:var(--font);font-size:9px;font-weight:700;
+  letter-spacing:2.5px;text-transform:uppercase;
+  color:var(--muted);padding:0 16px 6px;
+  white-space:nowrap;transition:opacity var(--tr);
+}
+.sidebar.collapsed .nav-grp-label{opacity:0;}
+
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 16px;
+  cursor:pointer;color:var(--dim);
+  font-family:var(--font);font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.8px;
+  white-space:nowrap;
+  border-left:2px solid transparent;
+  transition:all var(--tr);
+  text-decoration:none;
+}
+.nav-item:hover{color:var(--white);background:#1a1a1a;}
+.nav-item.active{color:var(--green);background:var(--green-d);border-left-color:var(--green);}
+.nav-icon{width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.nav-label{transition:opacity var(--tr);}
+.sidebar.collapsed .nav-label{opacity:0;}
+.nav-badge{
+  margin-left:auto;
+  font-family:var(--font);font-size:9px;font-weight:700;
+  background:var(--red);color:#fff;
+  padding:1px 6px;border-radius:3px;
+  transition:opacity var(--tr);
+}
+.sidebar.collapsed .nav-badge{opacity:0;}
+
+.sb-footer{padding:14px 16px;border-top:1px solid var(--border);white-space:nowrap;}
+.user-row{display:flex;align-items:center;gap:10px;}
+.user-av{
+  width:30px;height:30px;border-radius:50%;
+  background:var(--green);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font);font-size:11px;font-weight:700;
+  color:#000;flex-shrink:0;
+}
+.user-info{overflow:hidden;transition:opacity var(--tr);}
+.sidebar.collapsed .user-info{opacity:0;}
+.user-name{font-family:var(--font);font-size:12px;font-weight:700;color:var(--white);text-transform:uppercase;letter-spacing:0.5px;}
+.user-role{font-family:var(--font);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px;}
+
+/* ──────────── MAIN WRAP ──────────── */
+.main-wrap{
+  margin-left:var(--sidebar-w);
+  flex:1;display:flex;flex-direction:column;
+  min-height:100vh;
+  transition:margin-left var(--tr);
+}
+.main-wrap.sb-collapsed{margin-left:var(--sidebar-c);}
+
+/* ──────────── TOPBAR ──────────── */
+.topbar{
+  height:var(--hh);
+  background:#050505;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  padding:0 24px;gap:12px;
+  position:sticky;top:0;z-index:100;
+}
+.topbar-title{
+  font-family:var(--font);font-size:16px;font-weight:700;
+  color:var(--white);letter-spacing:2px;text-transform:uppercase;
+  flex:1;
+}
+.topbar-title .hi{color:var(--green);}
+
+.filter-grp{display:flex;align-items:center;gap:8px;}
+.fsel{
+  appearance:none;
+  background:#111;border:1px solid var(--border);
+  border-radius:4px;color:var(--dim);
+  font-family:var(--font);font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.5px;
+  padding:6px 26px 6px 10px;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;
+  transition:all var(--tr);min-width:110px;
+}
+.fsel:hover,.fsel:focus{border-color:var(--green);color:var(--white);outline:none;}
+
+.export-btn{
+  display:flex;align-items:center;gap:5px;
+  background:var(--green);color:#000;
+  border:none;border-radius:4px;
+  font-family:var(--font);font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;
+  padding:7px 14px;cursor:pointer;
+  transition:all var(--tr);
+}
+.export-btn:hover{opacity:0.85;transform:translateY(-1px);}
+
+.live-chip{
+  display:flex;align-items:center;gap:5px;
+  font-family:var(--font);font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1.5px;
+  color:var(--green);
+  border:1px solid rgba(0,230,118,0.3);
+  border-radius:20px;padding:4px 10px;
+}
+.live-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--green);
+  animation:blink 2s infinite;
+}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+/* ──────────── PAGE CONTAINER ──────────── */
+.page{display:none;flex-direction:column;flex:1;}
+.page.active{display:flex;}
+.content{flex:1;padding:24px;display:flex;flex-direction:column;gap:20px;}
+
+/* ──────────── SECTION HEADER ──────────── */
+.sec-hdr{
+  font-family:var(--font);font-size:10px;font-weight:700;
+  letter-spacing:3px;text-transform:uppercase;
+  color:var(--muted);
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:12px;
+}
+.sec-hdr::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ──────────── GRID ──────────── */
+.g12{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;}
+.c3{grid-column:span 3;} .c4{grid-column:span 4;}
+.c6{grid-column:span 6;} .c8{grid-column:span 8;}
+.c12{grid-column:span 12;}
+
+/* ──────────── KPI CARDS ──────────── */
+.kpi{
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:20px 18px 16px;
+  position:relative;overflow:hidden;
+  transition:all var(--tr);cursor:default;
+}
+.kpi::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--kc,var(--green));
+}
+.kpi:hover{border-color:var(--border-hi);transform:translateY(-2px);box-shadow:0 6px 28px rgba(0,0,0,0.7);}
+.kpi-lbl{
+  font-family:var(--font);font-size:9px;font-weight:700;
+  text-transform:uppercase;letter-spacing:2px;
+  color:var(--muted);margin-bottom:10px;
+}
+.kpi-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.kpi-icon{
+  width:32px;height:32px;border-radius:5px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;
+  background:var(--kib,var(--green-d));
+}
+.kpi-val{
+  font-family:var(--font);font-size:30px;font-weight:700;
+  color:var(--white);letter-spacing:-1px;
+  line-height:1;margin-bottom:8px;
+}
+.kpi-val sub{font-size:15px;font-weight:700;color:var(--dim);letter-spacing:0;vertical-align:baseline;}
+.kpi-foot{display:flex;align-items:center;gap:6px;}
+.delta{
+  font-family:var(--font);font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.5px;
+  padding:2px 8px;border-radius:3px;
+}
+.delta.up{background:var(--green-d);color:var(--green);}
+.delta.dn{background:var(--red-d);color:var(--red);}
+.kpi-sub{font-family:var(--font);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px;}
+.spark{position:absolute;bottom:0;right:0;width:90px;height:36px;opacity:0.25;}
+
+/* ──────────── PANELS ──────────── */
+.panel{
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:20px;
+  display:flex;flex-direction:column;
+  height:100%;
+}
+.panel-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+.panel-title{
+  font-family:var(--font);font-size:13px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1.5px;
+  color:var(--white);
+}
+.panel-sub{font-family:var(--font);font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-top:3px;}
+.chart-wrap{flex:1;position:relative;min-height:240px;}
+
+/* ──────────── LEGEND ──────────── */
+.leg{display:flex;gap:14px;}
+.leg-item{display:flex;align-items:center;gap:5px;font-family:var(--font);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--dim);}
+.leg-dot{width:8px;height:8px;border-radius:50%;}
+.leg-sq{width:10px;height:3px;border-radius:1px;}
+.leg-dash{width:14px;height:2px;border-top:2px dashed;}
+
+/* ──────────── FEED ──────────── */
+.feed{display:flex;flex-direction:column;flex:1;}
+.feed-item{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 0;
+  border-bottom:1px solid var(--border);
+  transition:background var(--tr);
+}
+.feed-item:last-child{border-bottom:none;}
+.feed-item:hover{background:#111;margin:0 -20px;padding:11px 20px;border-radius:4px;}
+.feed-ico{width:34px;height:34px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.feed-body{flex:1;min-width:0;}
+.feed-co{font-family:var(--font);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.feed-rep{font-family:var(--font);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px;margin-top:2px;}
+.feed-val{font-family:var(--font);font-size:14px;font-weight:700;color:var(--green);white-space:nowrap;}
+.feed-age{font-family:var(--font);font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;text-align:right;}
+
+/* ──────────── TABLE ──────────── */
+.tbl-controls{display:flex;gap:8px;margin-bottom:14px;align-items:center;}
+.srch{
+  flex:1;max-width:220px;
+  background:#111;border:1px solid var(--border);border-radius:4px;
+  color:var(--white);font-family:var(--font);font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.5px;
+  padding:7px 10px 7px 30px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2.5'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:9px center;
+  transition:all var(--tr);
+}
+.srch::placeholder{color:var(--muted);}
+.srch:focus{outline:none;border-color:var(--green);}
+
+.dtbl{width:100%;border-collapse:collapse;font-size:12px;}
+.dtbl thead tr{border-bottom:1px solid var(--border-hi);}
+.dtbl th{
+  font-family:var(--font);font-size:9px;font-weight:700;
+  text-transform:uppercase;letter-spacing:2px;
+  color:var(--muted);text-align:left;
+  padding:9px 12px;cursor:pointer;white-space:nowrap;
+  user-select:none;transition:color var(--tr);
+}
+.dtbl th:hover{color:var(--white);}
+.dtbl th.sorted{color:var(--green);}
+.sa{margin-left:3px;font-size:9px;}
+.dtbl tbody tr{border-bottom:1px solid var(--border);transition:background var(--tr);}
+.dtbl tbody tr:hover{background:var(--bg-hover);}
+.dtbl tbody tr:last-child{border-bottom:none;}
+.dtbl td{padding:12px 12px;color:var(--white);vertical-align:middle;}
+.rep-row{display:flex;align-items:center;gap:9px;}
+.rep-av{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font);font-size:9px;font-weight:700;
+  color:#000;flex-shrink:0;
+}
+.rep-nm{font-family:var(--font);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;}
+.rep-rg{font-family:var(--font);font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+.rev-c{font-family:var(--font);font-size:13px;font-weight:700;color:var(--white);}
+.wr-wrap{display:flex;align-items:center;gap:8px;}
+.wr-track{flex:1;height:5px;background:#222;border-radius:2px;overflow:hidden;max-width:70px;}
+.wr-fill{height:100%;border-radius:2px;}
+.wr-pct{font-family:var(--font);font-size:11px;font-weight:700;}
+.pip-v{font-family:var(--font);font-size:11px;font-weight:700;color:var(--blue);}
+.rk-b{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font);font-size:10px;font-weight:700;}
+.tag{display:inline-block;font-family:var(--font);font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:3px;}
+.tag-go{background:var(--green-d);color:var(--green);}
+.tag-risk{background:var(--amber-d);color:var(--amber);}
+.tag-behind{background:var(--red-d);color:var(--red);}
+
+/* ──────────── INTEL BLOCK ──────────── */
+.intel{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:6px;padding:24px;border-left:3px solid var(--green);
+}
+.intel-hdr{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.intel-badge{
+  background:var(--green-d);border:1px solid rgba(0,230,118,0.3);
+  border-radius:4px;padding:5px 12px;
+  font-family:var(--font);font-size:9px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;color:var(--green);
+}
+.intel-title{font-family:var(--font);font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--white);}
+.intel-ts{font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-left:auto;}
+.intel-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.iblk-title{
+  font-family:var(--font);font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1.5px;
+  color:var(--green);margin-bottom:8px;
+  display:flex;align-items:center;gap:6px;
+}
+.iblk-title::before{content:'';width:3px;height:12px;background:var(--green);border-radius:2px;display:inline-block;}
+.iblk.amb .iblk-title{color:var(--amber);} .iblk.amb .iblk-title::before{background:var(--amber);}
+.iblk.red .iblk-title{color:var(--red);}   .iblk.red .iblk-title::before{background:var(--red);}
+.iblk-body{font-family:var(--font);font-size:12px;font-weight:700;color:var(--dim);line-height:1.7;}
+.iblk-body strong{color:var(--white);}
+.iblk-list{list-style:none;display:flex;flex-direction:column;gap:7px;margin-top:6px;}
+.iblk-list li{font-family:var(--font);font-size:11px;font-weight:700;color:var(--dim);padding-left:14px;position:relative;line-height:1.6;}
+.iblk-list li::before{content:'→';position:absolute;left:0;color:var(--green);font-size:10px;}
+.iblk.amb .iblk-list li::before{color:var(--amber);}
+.iblk.red .iblk-list li::before{content:'⚠';color:var(--red);}
+.act-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:5px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;transition:border-color var(--tr);}
+.act-card:hover{border-color:var(--green);}
+.act-n{font-family:var(--font);font-size:22px;font-weight:700;color:var(--border-hi);line-height:1;flex-shrink:0;min-width:26px;}
+.act-txt strong{display:block;font-family:var(--font);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--white);margin-bottom:3px;}
+.act-txt p{font-family:var(--font);font-size:11px;font-weight:700;color:var(--muted);line-height:1.6;}
+
+/* ──────────── STRUCT / BLUEPRINT ──────────── */
+.struct{background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:24px;border-left:3px solid var(--blue);}
+.struct-tabs{display:flex;gap:3px;background:#111;border-radius:5px;padding:3px;width:fit-content;margin-bottom:20px;}
+.stab{
+  font-family:var(--font);font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;
+  padding:6px 14px;border-radius:4px;cursor:pointer;
+  color:var(--muted);border:none;background:transparent;transition:all var(--tr);
+}
+.stab.active{background:var(--bg-card);color:var(--blue);border:1px solid rgba(68,138,255,0.25);}
+.stab:hover:not(.active){color:var(--dim);}
+.spanel{display:none;} .spanel.active{display:block;}
+
+.kmap-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+.kmap-card{
+  background:var(--bg-panel);border:1px solid var(--border);
+  border-radius:5px;padding:14px 12px;position:relative;transition:all var(--tr);
+}
+.kmap-card:hover{border-color:var(--blue);}
+.kmap-card::after{content:attr(data-n);position:absolute;top:8px;right:10px;font-family:var(--font);font-size:26px;font-weight:700;color:var(--border);line-height:1;}
+.kmap-ico{font-size:18px;margin-bottom:8px;}
+.kmap-name{font-family:var(--font);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--white);margin-bottom:5px;line-height:1.2;}
+.kmap-formula{font-family:var(--font);font-size:9px;font-weight:700;color:var(--blue);letter-spacing:0.3px;background:var(--blue-d);padding:2px 6px;border-radius:3px;display:inline-block;margin-bottom:8px;}
+.kmap-desc{font-family:var(--font);font-size:10px;font-weight:700;color:var(--dim);line-height:1.6;margin-bottom:8px;}
+.kmap-tag{font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+.imp{display:inline-flex;align-items:center;gap:3px;font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;padding:2px 6px;border-radius:2px;margin-top:5px;}
+.imp.hi{background:var(--red-d);color:var(--red);}
+.imp.md{background:var(--amber-d);color:var(--amber);}
+
+.cp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+.cp-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:5px;padding:14px 12px;transition:all var(--tr);}
+.cp-card:hover{border-color:var(--green);}
+.cp-kpi{font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;}
+.cp-type{font-family:var(--font);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--green);margin-bottom:8px;}
+.cv{height:56px;margin-bottom:8px;}
+.cp-why{font-family:var(--font);font-size:10px;font-weight:700;color:var(--dim);line-height:1.6;}
+.cp-ax{font-family:var(--font);font-size:9px;font-weight:700;color:var(--muted);margin-top:6px;text-transform:uppercase;letter-spacing:0.3px;}
+.cp-ax span{color:var(--green);}
+
+.pred-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.pred-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:20px;border-top:2px solid;}
+.pred-card.risk{border-top-color:var(--red);}
+.pred-card.intent{border-top-color:var(--blue);}
+.pred-badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;padding:3px 9px;border-radius:3px;margin-bottom:12px;}
+.pred-card.risk .pred-badge{background:var(--red-d);color:var(--red);}
+.pred-card.intent .pred-badge{background:var(--blue-d);color:var(--blue);}
+.pred-name{font-family:var(--font);font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--white);margin-bottom:8px;}
+.pred-def{font-family:var(--font);font-size:11px;font-weight:700;color:var(--dim);line-height:1.7;margin-bottom:14px;}
+.pred-sigs{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.pred-sig{display:flex;align-items:flex-start;gap:8px;font-family:var(--font);font-size:11px;font-weight:700;color:var(--dim);line-height:1.5;}
+.sig-dot{width:5px;height:5px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.pred-card.risk .sig-dot{background:var(--red);}
+.pred-card.intent .sig-dot{background:var(--blue);}
+.pred-demo{background:var(--bg-card);border-radius:5px;padding:12px;}
+.pred-demo-lbl{font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px;}
+.mtr-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.mtr-nm{font-family:var(--font);font-size:10px;font-weight:700;text-transform:uppercase;color:var(--dim);width:95px;flex-shrink:0;}
+.mtr-track{flex:1;height:5px;background:#1a1a1a;border-radius:2px;overflow:hidden;}
+.mtr-fill{height:100%;border-radius:2px;}
+.mtr-val{font-family:var(--font);font-size:10px;font-weight:700;width:28px;text-align:right;flex-shrink:0;}
+.int-ftr{border-top:1px solid var(--border);padding-top:12px;margin-top:12px;}
+.int-ftr-lbl{font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;}
+.chips{display:flex;flex-wrap:wrap;gap:5px;}
+.chip{font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:2px 8px;border-radius:3px;background:var(--bg-card);border:1px solid var(--border);color:var(--dim);}
+
+
+
+/* ──────────── INTERNAL PAGES ──────────── */
+.pg-hero{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:30px;margin-bottom:20px;
+  border-left:3px solid var(--green);
+}
+.pg-hero-title{font-family:var(--font);font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--white);margin-bottom:6px;}
+.pg-hero-sub{font-family:var(--font);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);}
+.pg-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.pg-stat{background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:16px;text-align:center;}
+.pg-stat-val{font-family:var(--font);font-size:24px;font-weight:700;color:var(--white);letter-spacing:-0.5px;}
+.pg-stat-lbl{font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-top:4px;}
+
+.stage-list{background:var(--bg-card);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.stage-item{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--border);transition:background var(--tr);}
+.stage-item:last-child{border-bottom:none;}
+.stage-item:hover{background:#111;}
+.stage-num{font-family:var(--font);font-size:22px;font-weight:700;color:var(--border-hi);width:36px;flex-shrink:0;}
+.stage-body{flex:1;}
+.stage-name{font-family:var(--font);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--white);}
+.stage-detail{font-family:var(--font);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-top:3px;}
+.stage-bar-wrap{width:160px;flex-shrink:0;}
+.stage-bar-track{background:#1a1a1a;border-radius:2px;height:6px;overflow:hidden;margin-bottom:4px;}
+.stage-bar-fill{height:100%;border-radius:2px;}
+.stage-bar-lbl{font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);text-align:right;}
+.stage-val{font-family:var(--font);font-size:16px;font-weight:700;color:var(--white);width:80px;text-align:right;flex-shrink:0;}
+
+.acct-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.acct-card{background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:16px;transition:all var(--tr);}
+.acct-card:hover{border-color:var(--border-hi);transform:translateY(-1px);}
+.acct-name{font-family:var(--font);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--white);margin-bottom:4px;}
+.acct-meta{font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px;}
+.acct-val{font-family:var(--font);font-size:20px;font-weight:700;color:var(--green);}
+.acct-stage{font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-top:4px;}
+
+.wl-row{display:flex;gap:12px;}
+.wl-col{flex:1;}
+.wl-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+.wl-item:last-child{border-bottom:none;}
+.wl-name{font-family:var(--font);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--white);}
+.wl-reason{font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-top:2px;}
+.wl-val{font-family:var(--font);font-size:12px;font-weight:700;}
+
+.territory-row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+.terr-card{background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:16px;}
+.terr-name{font-family:var(--font);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--white);margin-bottom:12px;}
+.terr-stat{display:flex;justify-content:space-between;margin-bottom:6px;}
+.terr-stat-lbl{font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+.terr-stat-val{font-family:var(--font);font-size:11px;font-weight:700;color:var(--white);}
+.terr-bar-t{background:#1a1a1a;border-radius:2px;height:5px;overflow:hidden;margin-bottom:10px;}
+.terr-bar-f{height:100%;border-radius:2px;}
+
+.intg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.intg-card{background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:16px;text-align:center;transition:all var(--tr);}
+.intg-card:hover{border-color:var(--green);}
+.intg-icon{font-size:28px;margin-bottom:10px;}
+.intg-name{font-family:var(--font);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--white);margin-bottom:4px;}
+.intg-desc{font-family:var(--font);font-size:10px;font-weight:700;color:var(--muted);}
+.intg-status{display:inline-block;font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:2px 8px;border-radius:3px;margin-top:8px;}
+.intg-on{background:var(--green-d);color:var(--green);}
+.intg-off{background:var(--border);color:var(--muted);}
+
+.pref-blk{background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:18px;margin-bottom:12px;}
+.pref-blk-title{font-family:var(--font);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--white);margin-bottom:14px;}
+.pref-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);}
+.pref-row:last-child{border-bottom:none;}
+.pref-lbl{font-family:var(--font);font-size:11px;font-weight:700;color:var(--dim);}
+.pref-val{font-family:var(--font);font-size:11px;font-weight:700;color:var(--white);}
+.toggle{
+  width:36px;height:20px;border-radius:10px;
+  background:#1a1a1a;border:1px solid var(--border);
+  position:relative;cursor:pointer;transition:background var(--tr);
+}
+.toggle.on{background:var(--green);}
+.toggle-knob{
+  width:14px;height:14px;border-radius:50%;
+  background:var(--muted);position:absolute;
+  top:2px;left:2px;transition:all var(--tr);
+}
+.toggle.on .toggle-knob{background:#000;left:18px;}
+
+/* ──────────── SCROLLBAR ──────────── */
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border-hi);border-radius:2px;}
+
+/* ──────────── ANIMS ──────────── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.kpi{animation:fadeUp 0.45s ease both;}
+.kpi:nth-child(1){animation-delay:.04s;} .kpi:nth-child(2){animation-delay:.08s;}
+.kpi:nth-child(3){animation-delay:.12s;} .kpi:nth-child(4){animation-delay:.16s;}
+.panel{animation:fadeUp 0.45s ease both;animation-delay:.2s;}
+
+/* ──────────── RESPONSIVE ──────────── */
+@media(max-width:1100px){.c3{grid-column:span 6;}.c8{grid-column:span 12;}.c4{grid-column:span 12;}.intel-grid,.pred-grid{grid-template-columns:1fr;}.kmap-grid,.cp-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:700px){.c3,.c6{grid-column:span 12;}.sidebar{transform:translateX(-100%);}.main-wrap{margin-left:0;}.content{padding:14px;}.kmap-grid,.cp-grid{grid-template-columns:1fr 1fr;}.pg-stat-grid{grid-template-columns:1fr 1fr;}.territory-row,.wl-row,.acct-grid,.intg-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-mark">SI</div>
+    <span class="sb-brand">Sales Intel</span>
+  </div>
+  <button class="sb-toggle" id="sbToggle" onclick="toggleSidebar()">◀</button>
+
+  <nav class="nav-sec">
+    <div class="nav-grp-label">Core</div>
+    <a class="nav-item active" onclick="navTo('pg-dashboard',this)">
+      <span class="nav-icon">◈</span><span class="nav-label">Dashboard</span>
+    </a>
+    <a class="nav-item" onclick="navTo('pg-pipeline',this)">
+      <span class="nav-icon">◎</span><span class="nav-label">Pipeline</span>
+      <span class="nav-badge">14</span>
+    </a>
+    <a class="nav-item" onclick="navTo('pg-forecasting',this)">
+      <span class="nav-icon">◐</span><span class="nav-label">Forecasting</span>
+    </a>
+    <a class="nav-item" onclick="navTo('pg-accounts',this)">
+      <span class="nav-icon">◉</span><span class="nav-label">Accounts</span>
+    </a>
+    <div class="nav-grp-label" style="margin-top:14px;">Analytics</div>
+    <a class="nav-item" onclick="navTo('pg-repperf',this)">
+      <span class="nav-icon">▤</span><span class="nav-label">Rep Performance</span>
+    </a>
+    <a class="nav-item" onclick="navTo('pg-winloss',this)">
+      <span class="nav-icon">▦</span><span class="nav-label">Win / Loss</span>
+    </a>
+    <a class="nav-item" onclick="navTo('pg-territory',this)">
+      <span class="nav-icon">▣</span><span class="nav-label">Territory View</span>
+    </a>
+    <div class="nav-grp-label" style="margin-top:14px;">Settings</div>
+    <a class="nav-item" onclick="navTo('pg-integrations',this)">
+      <span class="nav-icon">◌</span><span class="nav-label">Integrations</span>
+    </a>
+    <a class="nav-item" onclick="navTo('pg-preferences',this)">
+      <span class="nav-icon">◯</span><span class="nav-label">Preferences</span>
+    </a>
+  </nav>
+
+  <div class="sb-footer">
+    <div class="user-row">
+      <div class="user-av">CE</div>
+      <div class="user-info">
+        <div class="user-name">Chief Executive</div>
+        <div class="user-role">Exec · Read-Only</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<div class="main-wrap" id="mainWrap">
+
+  <header class="topbar">
+    <div class="topbar-title">SALES INTELLIGENCE <span class="hi">DASHBOARD</span></div>
+    <div class="filter-grp">
+      <select class="fsel" id="regionFilter" onchange="applyFilters()">
+        <option value="all">All Regions</option>
+        <option value="apac">APAC</option>
+        <option value="emea">EMEA</option>
+        <option value="na">North America</option>
+        <option value="latam">LATAM</option>
+      </select>
+      <select class="fsel" id="dateFilter" onchange="applyFilters()">
+        <option value="q2">Q2 2026</option>
+        <option value="q1">Q1 2026</option>
+        <option value="ytd">YTD 2026</option>
+        <option value="ttm">Trailing 12M</option>
+      </select>
+      <div class="live-chip"><div class="live-dot"></div>LIVE</div>
+      <button class="export-btn" onclick="exportReport()">↓ EXPORT</button>
+    </div>
+  </header>
+
+  <!-- ════════ PAGE: DASHBOARD ════════ -->
+  <div class="page active" id="pg-dashboard">
+   <div class="content">
+
+    <!-- KPI ROW -->
+    <div>
+      <div class="sec-hdr">Key Performance Indicators</div>
+      <div class="g12">
+        <div class="kpi c3" style="--kc:var(--green);--kib:var(--green-d);">
+          <div class="kpi-hdr"><div class="kpi-lbl">Gross Revenue</div><div class="kpi-icon">💰</div></div>
+          <div class="kpi-val">$8.4<sub>M</sub></div>
+          <div class="kpi-foot"><span class="delta up">↑ 14.2%</span><span class="kpi-sub">VS PRIOR PERIOD</span></div>
+          <svg class="spark" viewBox="0 0 100 36"><polyline points="0,32 14,26 28,28 42,16 56,20 70,10 84,6 100,2" fill="none" stroke="#00e676" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="kpi c3" style="--kc:var(--amber);--kib:var(--amber-d);">
+          <div class="kpi-hdr"><div class="kpi-lbl">Quota Attainment</div><div class="kpi-icon">🎯</div></div>
+          <div class="kpi-val">87<sub>%</sub></div>
+          <div class="kpi-foot"><span class="delta dn">↓ 3.1%</span><span class="kpi-sub">TARGET: 100%</span></div>
+          <svg class="spark" viewBox="0 0 100 36"><polyline points="0,8 14,12 28,10 42,18 56,16 70,22 84,26 100,24" fill="none" stroke="#ffab00" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="kpi c3" style="--kc:var(--blue);--kib:var(--blue-d);">
+          <div class="kpi-hdr"><div class="kpi-lbl">Pipeline Velocity</div><div class="kpi-icon">⚡</div></div>
+          <div class="kpi-val">$142<sub>K/D</sub></div>
+          <div class="kpi-foot"><span class="delta up">↑ 8.7%</span><span class="kpi-sub">CYCLE COMPRESSED</span></div>
+          <svg class="spark" viewBox="0 0 100 36"><polyline points="0,28 14,24 28,26 42,18 56,12 70,8 84,4 100,6" fill="none" stroke="#448aff" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="kpi c3" style="--kc:var(--green);--kib:var(--green-d);">
+          <div class="kpi-hdr"><div class="kpi-lbl">Avg Deal Size</div><div class="kpi-icon">📊</div></div>
+          <div class="kpi-val">$48<sub>K</sub></div>
+          <div class="kpi-foot"><span class="delta up">↑ 21.4%</span><span class="kpi-sub">ENTERPRISE UPLIFT</span></div>
+          <svg class="spark" viewBox="0 0 100 36"><polyline points="0,30 14,26 28,22 42,20 56,14 70,10 84,8 100,4" fill="none" stroke="#00e676" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHART ROW -->
+    <div>
+      <div class="sec-hdr">Revenue Trend &amp; Recent Activity</div>
+      <div class="g12">
+        <div class="panel c8">
+          <div class="panel-hd">
+            <div><div class="panel-title">Monthly Revenue Trends</div><div class="panel-sub">Actual vs Forecast · Q2 2026</div></div>
+            <div class="leg">
+              <div class="leg-item"><div class="leg-dot" style="background:var(--green);"></div>ACTUAL</div>
+              <div class="leg-item"><div class="leg-dash" style="border-color:var(--red);opacity:.7;"></div>FORECAST</div>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="revenueChart" role="img" aria-label="Monthly revenue line chart actual vs forecast Jan–Jun 2026">Revenue trend chart</canvas></div>
+        </div>
+        <div class="panel c4">
+          <div class="panel-hd">
+            <div><div class="panel-title">HIGH-VALUE WINS</div><div class="panel-sub">Recent Closes · 30 Days</div></div>
+            <span style="font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--green);background:var(--green-d);padding:2px 8px;border-radius:3px;">+7 This Week</span>
+          </div>
+          <div class="feed" id="feedList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REP TABLE -->
+    <div>
+      <div class="sec-hdr">Sales Rep Performance</div>
+      <div class="panel">
+        <div class="panel-hd">
+          <div><div class="panel-title">Top Performing Sales Representatives</div><div class="panel-sub">Sortable · Filterable · Q2 2026</div></div>
+        </div>
+        <div class="tbl-controls">
+          <input class="srch" type="text" placeholder="Search reps..." id="repSearch" oninput="filterTable()">
+          <select class="fsel" id="statusFilter" onchange="filterTable()">
+            <option value="all">All Status</option>
+            <option value="on-track">On Track</option>
+            <option value="at-risk">At Risk</option>
+            <option value="behind">Behind</option>
+          </select>
+          <div style="margin-left:auto;font-family:var(--font);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);">
+            Showing <span id="rowCount">8</span> of 8 Reps
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="dtbl">
+            <thead><tr>
+              <th style="width:38px;">#</th>
+              <th onclick="sortTable(1)">Rep Name <span class="sa">↕</span></th>
+              <th onclick="sortTable(2)" class="sorted">Closed Revenue <span class="sa">↓</span></th>
+              <th onclick="sortTable(3)">Win Rate <span class="sa">↕</span></th>
+              <th onclick="sortTable(4)">Active Pipeline <span class="sa">↕</span></th>
+              <th onclick="sortTable(5)">Region <span class="sa">↕</span></th>
+              <th>Status</th>
+            </tr></thead>
+            <tbody id="repTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- INTEL REPORT -->
+    <div>
+      <div class="sec-hdr">RevOps Intelligence · Analytical Framework</div>
+      <div class="intel">
+        <div class="intel-hdr">
+          <span class="intel-badge">Confidential · C-Suite</span>
+          <div>
+            <div class="intel-title">Executive Revenue Intelligence Report</div>
+            <div style="font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-top:3px;">Generated For CEO &amp; CFO · Based On Q2 2026 CRM Dataset</div>
+          </div>
+          <div class="intel-ts">May 16, 2026 · 09:00 PKT</div>
+        </div>
+        <div class="intel-grid">
+          <div class="iblk">
+            <div class="iblk-title">01 · Executive Summary</div>
+            <div class="iblk-body">Revenue momentum is <strong>positive but uneven</strong>. Gross revenue reached <strong>$8.4M in Q2</strong>, up 14.2% QoQ, driven primarily by enterprise deal expansion in North America. Overall quota attainment sits at <strong>87%</strong> — 13 points below target — signaling execution gaps in LATAM and APAC. Pipeline velocity improved to <strong>$142K/day</strong>. Average deal size surged 21% to <strong>$48K</strong>, validating the upmarket strategy.</div>
+          </div>
+          <div class="iblk amb">
+            <div class="iblk-title">02 · Underperforming Areas</div>
+            <ul class="iblk-list">
+              <li><strong>LATAM Territory:</strong> 61% quota attainment. 38-day longer sales cycle vs North America. Insufficient local SE coverage.</li>
+              <li><strong>SMB Segment:</strong> Win rate dropped from 44% to 29% QoQ. Trial-to-paid conversion churn 22% above benchmark.</li>
+              <li><strong>PS Attach Rate:</strong> Only 18% of new enterprise logos buying PS bundles vs 40% target. ~$1.1M lost NRR.</li>
+            </ul>
+          </div>
+          <div class="iblk red">
+            <div class="iblk-title">03 · Win-Loss Diagnostics</div>
+            <ul class="iblk-list">
+              <li><strong>Proposal → Negotiation (41% stall):</strong> Competitor discounting 18–25% forcing unplanned concessions with no structured approval workflow.</li>
+              <li><strong>Discovery → Proposal (28% stall):</strong> APAC reps advancing underprepared opportunities. 6-day avg vs 14-day benchmark.</li>
+              <li><strong>Closed-Lost (34% "no decision"):</strong> Insufficient executive sponsorship and weak business case documentation at economic buyer level.</li>
+            </ul>
+          </div>
+          <div class="iblk">
+            <div class="iblk-title">04 · Strategic Action Plan</div>
+            <div class="act-card"><div class="act-n">01</div><div class="act-txt"><strong>Deploy Competitive Pricing Playbook</strong><p>Issue structured discount approval matrix. Cap field discounting at 12% without VP sign-off. Bundle PS attach incentive ($2K SPiF per qualifying deal).</p></div></div>
+            <div class="act-card"><div class="act-n">02</div><div class="act-txt"><strong>LATAM Emergency Coverage Rebalancing</strong><p>Reassign 2 senior NA SEs to LATAM accounts above $50K ACV for 60 days. Activate deal coaching alerts for any LATAM deal stagnant &gt;21 days.</p></div></div>
+            <div class="act-card"><div class="act-n">03</div><div class="act-txt"><strong>Executive Sponsor Program</strong><p>Mandate CRO/VP-level sponsor mapping for all opportunities &gt;$75K ACV in Stage 3+. Launch Business Value Assessment template targeting 15% reduction in no-decision outcomes.</p></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLUEPRINT -->
+    <div>
+      <div class="sec-hdr">B2B SaaS Dashboard · Structural Design Map</div>
+      <div class="struct">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-family:var(--font);font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--white);">Sales Manager Dashboard Blueprint</div>
+            <div style="font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-top:4px;">Covers: Critical KPIs · Chart Pairings · Predictive AI Indicators</div>
+          </div>
+          <div style="font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--blue);background:var(--blue-d);border:1px solid rgba(68,138,255,0.25);padding:5px 12px;border-radius:4px;">BI Consultant Framework</div>
+        </div>
+        <div class="struct-tabs">
+          <button class="stab active" onclick="switchTab('kpis',this)">01 · Critical KPIs</button>
+          <button class="stab" onclick="switchTab('charts',this)">02 · Chart Pairings</button>
+          <button class="stab" onclick="switchTab('predictive',this)">03 · Predictive AI</button>
+        </div>
+
+        <div class="spanel active" id="tab-kpis">
+          <div style="font-family:var(--font);font-size:11px;font-weight:700;color:var(--dim);line-height:1.7;margin-bottom:16px;max-width:700px;">Five metrics that form the minimum viable measurement layer for any B2B SaaS sales operation — each with its exact calculation method, update cadence, and impact tier.</div>
+          <div class="kmap-grid">
+            <div class="kmap-card" data-n="01"><div class="kmap-ico">📈</div><div class="kmap-name">Daily Activity Rate</div><div class="kmap-formula">(Calls + Emails + Demos) ÷ Working Days</div><div class="kmap-desc">Tracks raw seller productivity inputs. Early warning signal before pipeline quality deteriorates.</div><div class="kmap-tag">Cadence: Daily</div><div class="imp hi">■ High Impact</div></div>
+            <div class="kmap-card" data-n="02"><div class="kmap-ico">🎯</div><div class="kmap-name">Quota Attainment %</div><div class="kmap-formula">Closed Revenue ÷ Quota × 100</div><div class="kmap-desc">Most-watched number in any sales org. Drives comp, territory, and coaching prioritization.</div><div class="kmap-tag">Cadence: Weekly</div><div class="imp hi">■ High Impact</div></div>
+            <div class="kmap-card" data-n="03"><div class="kmap-ico">⚡</div><div class="kmap-name">Pipeline Velocity</div><div class="kmap-formula">(Deals × Win Rate × ACV) ÷ Cycle Days</div><div class="kmap-desc">Composite metric synthesizing volume, conversion, and deal value into a dollar-per-day throughput.</div><div class="kmap-tag">Cadence: Weekly</div><div class="imp hi">■ High Impact</div></div>
+            <div class="kmap-card" data-n="04"><div class="kmap-ico">🔄</div><div class="kmap-name">Stage Conversion Rate</div><div class="kmap-formula">Deals Advancing ÷ Deals Entering × 100</div><div class="kmap-desc">Identifies where deals stall. Drop at Proposal = pricing. Drop at Discovery = qualification problems.</div><div class="kmap-tag">Cadence: Weekly</div><div class="imp hi">■ High Impact</div></div>
+            <div class="kmap-card" data-n="05"><div class="kmap-ico">⏱</div><div class="kmap-name">Average Sales Cycle</div><div class="kmap-formula">Sum Days to Close ÷ Closed Deals</div><div class="kmap-desc">Determines forecast reliability and resource planning accuracy. Exposes outliers rushing or stalling.</div><div class="kmap-tag">Cadence: Monthly</div><div class="imp md">■ Medium Impact</div></div>
+          </div>
+        </div>
+
+        <div class="spanel" id="tab-charts">
+          <div style="font-family:var(--font);font-size:11px;font-weight:700;color:var(--dim);line-height:1.7;margin-bottom:16px;max-width:700px;">Each KPI's optimal chart type — chosen for data shape and the question a manager needs to answer in under 3 seconds of glance time.</div>
+          <div class="cp-grid">
+            <div class="cp-card"><div class="cp-kpi">KPI 01 · Activity Rate</div><div class="cp-type">Grouped Bar Chart</div><div class="cv"><svg viewBox="0 0 120 56" width="100%" height="100%"><rect x="8" y="28" width="11" height="26" fill="#00e676" opacity=".8" rx="1"/><rect x="21" y="18" width="11" height="36" fill="#448aff" opacity=".7" rx="1"/><rect x="34" y="36" width="11" height="18" fill="#ff1744" opacity=".7" rx="1"/><rect x="54" y="22" width="11" height="32" fill="#00e676" opacity=".8" rx="1"/><rect x="67" y="12" width="11" height="42" fill="#448aff" opacity=".7" rx="1"/><rect x="80" y="28" width="11" height="26" fill="#ff1744" opacity=".7" rx="1"/><line x1="4" y1="54" x2="116" y2="54" stroke="rgba(255,255,255,0.08)" stroke-width=".5"/></svg></div><div class="cp-why">Compares calls vs emails vs demos per rep side-by-side, revealing activity mix imbalances that impact conversion.</div><div class="cp-ax">X: <span>Rep</span> · Y: <span>Count</span> · Color: <span>Type</span></div></div>
+            <div class="cp-card"><div class="cp-kpi">KPI 02 · Quota Attainment</div><div class="cp-type">Bullet / Gauge Chart</div><div class="cv"><svg viewBox="0 0 120 56" width="100%" height="100%"><rect x="8" y="20" width="104" height="16" fill="rgba(255,255,255,0.05)" rx="2"/><rect x="8" y="22" width="56" height="12" fill="rgba(255,255,255,0.10)" rx="2"/><rect x="8" y="22" width="72" height="12" fill="#00e676" opacity=".85" rx="1"/><line x1="100" y1="16" x2="100" y2="40" stroke="#ff1744" stroke-width="2"/><text x="102" y="14" fill="#ff1744" font-size="7" font-family="monospace">100%</text><text x="8" y="50" fill="rgba(255,255,255,0.3)" font-size="7" font-family="monospace">87% attained</text></svg></div><div class="cp-why">Shows current attainment vs target and benchmark — three data points in one compact strip readable instantly.</div><div class="cp-ax">Fill: <span>Actual %</span> · Line: <span>Target</span> · Band: <span>Prior</span></div></div>
+            <div class="cp-card"><div class="cp-kpi">KPI 03 · Pipeline Velocity</div><div class="cp-type">Smooth Area Line</div><div class="cv"><svg viewBox="0 0 120 56" width="100%" height="100%"><defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00e676" stop-opacity=".35"/><stop offset="100%" stop-color="#00e676" stop-opacity="0"/></linearGradient></defs><path d="M8,46 C22,40 36,34 50,28 C64,22 78,16 92,12 C100,10 108,8 112,6 L112,56 L8,56Z" fill="url(#g1)"/><path d="M8,46 C22,40 36,34 50,28 C64,22 78,16 92,12 C100,10 108,8 112,6" fill="none" stroke="#00e676" stroke-width="1.5"/><path d="M8,42 C22,44 36,42 50,38 C64,34 78,32 92,30 L112,28" fill="none" stroke="#ff1744" stroke-width="1" stroke-dasharray="3,2" opacity=".6"/></svg></div><div class="cp-why">Area charts communicate trajectory and momentum better than bars. Rate-of-change is intuitively visible.</div><div class="cp-ax">X: <span>Week</span> · Y: <span>$/Day</span> · Dashed: <span>Forecast</span></div></div>
+            <div class="cp-card"><div class="cp-kpi">KPI 04 · Stage Conversion</div><div class="cp-type">Funnel Chart</div><div class="cv"><svg viewBox="0 0 120 56" width="100%" height="100%"><rect x="8" y="2" width="104" height="9" fill="#00e676" opacity=".8" rx="1"/><rect x="16" y="13" width="88" height="9" fill="#448aff" opacity=".75" rx="1"/><rect x="26" y="24" width="68" height="9" fill="#ffab00" opacity=".75" rx="1"/><rect x="36" y="35" width="48" height="9" fill="#ff1744" opacity=".75" rx="1"/><rect x="44" y="46" width="32" height="9" fill="#00e676" opacity=".8" rx="1"/></svg></div><div class="cp-why">Makes drop-off between stages immediately visible. Managers see which stage is the biggest conversion leak.</div><div class="cp-ax">Stages: <span>Prospect → Close</span></div></div>
+            <div class="cp-card"><div class="cp-kpi">KPI 05 · Sales Cycle</div><div class="cp-type">Box Plot / Scatter</div><div class="cv"><svg viewBox="0 0 120 56" width="100%" height="100%"><line x1="30" y1="28" x2="30" y2="10" stroke="#00e676" stroke-width="1" opacity=".4"/><line x1="30" y1="48" x2="30" y2="28" stroke="#00e676" stroke-width="1" opacity=".4"/><rect x="22" y="18" width="16" height="20" fill="none" stroke="#00e676" stroke-width="1.5" rx="1"/><line x1="22" y1="26" x2="38" y2="26" stroke="#00e676" stroke-width="2"/><circle cx="58" cy="16" r="3" fill="#ff1744" opacity=".7"/><line x1="72" y1="20" x2="72" y2="8" stroke="#448aff" stroke-width="1" opacity=".4"/><line x1="72" y1="44" x2="72" y2="20" stroke="#448aff" stroke-width="1" opacity=".4"/><rect x="64" y="14" width="16" height="16" fill="none" stroke="#448aff" stroke-width="1.5" rx="1"/><line x1="64" y1="21" x2="80" y2="21" stroke="#448aff" stroke-width="2"/></svg></div><div class="cp-why">Shows median, spread, and outliers at once. Reveals reps with wildly inconsistent cycle times — the real coaching insight.</div><div class="cp-ax">X: <span>Rep</span> · Y: <span>Days</span> · Dot: <span>Outlier</span></div></div>
+          </div>
+        </div>
+
+        <div class="spanel" id="tab-predictive">
+          <div style="font-family:var(--font);font-size:11px;font-weight:700;color:var(--dim);line-height:1.7;margin-bottom:16px;max-width:700px;">Two forward-looking ML-derived indicators that surface risk and opportunity before they appear in lagging metrics. Both render as simple scores — zero statistical literacy required from the manager.</div>
+          <div class="pred-grid">
+            <div class="pred-card risk">
+              <div class="pred-badge">🔴 Predictive Indicator 01</div>
+              <div class="pred-name">Deal Forecast Risk Score</div>
+              <div class="pred-def">An ML probability score (0–100) estimating the likelihood a deal will not close within its committed quarter. Surfaces at-risk deals 3–6 weeks before quarter end — when a manager can still intervene.</div>
+              <div style="font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--red);margin-bottom:8px;">Input Signals</div>
+              <div class="pred-sigs">
+                <div class="pred-sig"><div class="sig-dot"></div>Days since last CRM activity (call, email, meeting)</div>
+                <div class="pred-sig"><div class="sig-dot"></div>Stakeholders engaged vs typical for this deal size tier</div>
+                <div class="pred-sig"><div class="sig-dot"></div>Time in current stage vs historical median</div>
+                <div class="pred-sig"><div class="sig-dot"></div>Competitor mentions in call transcripts (NLP)</div>
+                <div class="pred-sig"><div class="sig-dot"></div>Buyer-to-seller communication ratio</div>
+              </div>
+              <div class="pred-demo">
+                <div class="pred-demo-lbl">Live Risk Scores · Sample Deals</div>
+                <div class="mtr-row"><div class="mtr-nm">TechVision Corp</div><div class="mtr-track"><div class="mtr-fill" style="width:14%;background:#00e676;"></div></div><div class="mtr-val" style="color:#00e676;">14</div></div>
+                <div class="mtr-row"><div class="mtr-nm">Gulf Dynamics</div><div class="mtr-track"><div class="mtr-fill" style="width:41%;background:#ffab00;"></div></div><div class="mtr-val" style="color:#ffab00;">41</div></div>
+                <div class="mtr-row"><div class="mtr-nm">DataStream Ltd</div><div class="mtr-track"><div class="mtr-fill" style="width:73%;background:#ff1744;"></div></div><div class="mtr-val" style="color:#ff1744;">73</div></div>
+                <div class="mtr-row"><div class="mtr-nm">Alpha FinTech</div><div class="mtr-track"><div class="mtr-fill" style="width:88%;background:#ff1744;"></div></div><div class="mtr-val" style="color:#ff1744;">88</div></div>
+              </div>
+              <div class="int-ftr"><div class="int-ftr-lbl">Integration Points</div><div class="chips"><span class="chip">Salesforce Einstein</span><span class="chip">HubSpot AI</span><span class="chip">Clari</span><span class="chip">Gong Forecast</span></div></div>
+            </div>
+            <div class="pred-card intent">
+              <div class="pred-badge">🔵 Predictive Indicator 02</div>
+              <div class="pred-name">Lead Intent Grade</div>
+              <div class="pred-def">A real-time composite score (A/B/C/D) reflecting a prospect's observed purchasing intent — synthesized from behavioral signals across web, email, content, and third-party intent data platforms.</div>
+              <div style="font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--blue);margin-bottom:8px;">Input Signals</div>
+              <div class="pred-sigs">
+                <div class="pred-sig"><div class="sig-dot"></div>Pricing page visits, demo requests, trial sign-up frequency</div>
+                <div class="pred-sig"><div class="sig-dot"></div>Email open rate, reply rate, time-to-reply trends</div>
+                <div class="pred-sig"><div class="sig-dot"></div>3rd-party intent data: topic clusters searched by account domain</div>
+                <div class="pred-sig"><div class="sig-dot"></div>Job postings signaling a relevant technology initiative</div>
+                <div class="pred-sig"><div class="sig-dot"></div>LinkedIn engagement with company content by known contacts</div>
+              </div>
+              <div class="pred-demo">
+                <div class="pred-demo-lbl">Intent Grade Distribution · Q2 Pipeline</div>
+                <div class="mtr-row"><div class="mtr-nm">Grade A (Hot)</div><div class="mtr-track"><div class="mtr-fill" style="width:28%;background:#00e676;"></div></div><div class="mtr-val" style="color:#00e676;">28%</div></div>
+                <div class="mtr-row"><div class="mtr-nm">Grade B (Warm)</div><div class="mtr-track"><div class="mtr-fill" style="width:41%;background:#448aff;"></div></div><div class="mtr-val" style="color:#448aff;">41%</div></div>
+                <div class="mtr-row"><div class="mtr-nm">Grade C (Lukewarm)</div><div class="mtr-track"><div class="mtr-fill" style="width:21%;background:#ffab00;"></div></div><div class="mtr-val" style="color:#ffab00;">21%</div></div>
+                <div class="mtr-row"><div class="mtr-nm">Grade D (Cold)</div><div class="mtr-track"><div class="mtr-fill" style="width:10%;background:#ff1744;"></div></div><div class="mtr-val" style="color:#ff1744;">10%</div></div>
+              </div>
+              <div class="int-ftr"><div class="int-ftr-lbl">Integration Points</div><div class="chips"><span class="chip">6sense</span><span class="chip">Bombora</span><span class="chip">Demandbase</span><span class="chip">G2 Buyer Intent</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+   </div>
+  </div><!-- /pg-dashboard -->
+
+  <!-- ════════ PAGE: PIPELINE ════════ -->
+  <div class="page" id="pg-pipeline">
+   <div class="content">
+    <div class="pg-hero" style="border-left-color:var(--blue);">
+      <div class="pg-hero-title">Pipeline Overview</div>
+      <div class="pg-hero-sub">14 Active Deals · Q2 2026 · All Regions</div>
+    </div>
+    <div class="pg-stat-grid">
+      <div class="pg-stat"><div class="pg-stat-val" style="color:var(--green);">$12.4M</div><div class="pg-stat-lbl">Total Pipeline Value</div></div>
+      <div class="pg-stat"><div class="pg-stat-val">14</div><div class="pg-stat-lbl">Active Opportunities</div></div>
+      <div class="pg-stat"><div class="pg-stat-val" style="color:var(--amber);">34d</div><div class="pg-stat-lbl">Avg Days In Stage</div></div>
+      <div class="pg-stat"><div class="pg-stat-val" style="color:var(--red);">3</div><div class="pg-stat-lbl">At-Risk Deals</div></div>
+    </div>
+    <div class="sec-hdr">Deals By Pipeline Stage</div>
+    <div class="stage-list">
+      <div class="stage-item"><div class="stage-num">01</div><div class="stage-body"><div class="stage-name">Prospecting</div><div class="stage-detail">Initial outreach · 8 Deals</div></div><div class="stage-bar-wrap"><div class="stage-bar-track"><div class="stage-bar-fill" style="width:100%;background:#448aff;"></div></div><div class="stage-bar-lbl">100%</div></div><div class="stage-val">$3.2M</div></div>
+      <div class="stage-item"><div class="stage-num">02</div><div class="stage-body"><div class="stage-name">Qualification</div><div class="stage-detail">Needs discovery · 12 Deals</div></div><div class="stage-bar-wrap"><div class="stage-bar-track"><div class="stage-bar-fill" style="width:78%;background:#00e676;"></div></div><div class="stage-bar-lbl">78%</div></div><div class="stage-val">$2.8M</div></div>
+      <div class="stage-item"><div class="stage-num">03</div><div class="stage-body"><div class="stage-name">Proposal</div><div class="stage-detail">SOW sent · 9 Deals</div></div><div class="stage-bar-wrap"><div class="stage-bar-track"><div class="stage-bar-fill" style="width:61%;background:#ffab00;"></div></div><div class="stage-bar-lbl">61%</div></div><div class="stage-val">$2.1M</div></div>
+      <div class="stage-item"><div class="stage-num">04</div><div class="stage-body"><div class="stage-name">Negotiation</div><div class="stage-detail">Legal review · 5 Deals</div></div><div class="stage-bar-wrap"><div class="stage-bar-track"><div class="stage-bar-fill" style="width:42%;background:#ff1744;"></div></div><div class="stage-bar-lbl">42%</div></div><div class="stage-val">$1.9M</div></div>
+      <div class="stage-item"><div class="stage-num">05</div><div class="stage-body"><div class="stage-name">Closed Won</div><div class="stage-detail">Contract signed · 3 Deals</div></div><div class="stage-bar-wrap"><div class="stage-bar-track"><div class="stage-bar-fill" style="width:26%;background:#00e676;"></div></div><div class="stage-bar-lbl">26%</div></div><div class="stage-val">$0.9M</div></div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ════════ PAGE: FORECASTING ════════ -->
+  <div class="page" id="pg-forecasting">
+   <div class="content">
+    <div class="pg-hero" style="border-left-color:var(--amber);">
+      <div class="pg-hero-title">Revenue Forecasting</div>
+      <div class="pg-hero-sub">Q2 2026 Projection · Confidence-Weighted Model</div>
+    </div>
+    <div class="pg-stat-grid">
+      <div class="pg-stat"><div class="pg-stat-val" style="color:var(--green);">$9.1M</div><div class="pg-stat-lbl">Best Case Forecast</div></div>
+      <div class="pg-stat"><div class="pg-stat-val" style="color:var(--amber);">$7.6M</div><div class="pg-stat-lbl">Commit Forecast</div></div>
+      <div class="pg-stat"><div class="pg-stat-val" style="color:var(--red);">$6.2M</div><div class="pg-stat-lbl">Worst Case</div></div>
+      <div class="pg-stat"><div class="pg-stat-val">87%</div><div class="pg-stat-lbl">Forecast Accuracy TTM</div></div>
+    </div>
+    <div class="sec-hdr">Monthly Forecast vs Actuals</div>
+    <div class="panel"><div class="panel-hd"><div><div class="panel-title">Forecast Accuracy Trend</div><div class="panel-sub">Commit vs Best Case vs Actual · Jan–Jun 2026</div></div><div class="leg"><div class="leg-item"><div class="leg-dot" style="background:var(--green);"></div>Actual</div><div class="leg-item"><div class="leg-dot" style="background:var(--amber);"></div>Commit</div><div class="leg-item"><div class="leg-dot" style="background:var(--blue);"></div>Best Case</div></div></div><div class="chart-wrap"><canvas id="forecastChart" role="img" aria-label="Forecast accuracy trend chart">Forecast chart</canvas></div></div>
+    <div class="sec-hdr">At-Risk Committed Deals</div>
+    <div class="stage-list">
+      <div class="stage-item"><div class="stage-num" style="color:var(--red);">⚠</div><div class="stage-body"><div class="stage-name">Alpha FinTech — $134K</div><div class="stage-detail">Risk Score: 88 · Last Activity: 14 Days Ago · Rep: Zara Hussain</div></div><div class="stage-bar-wrap"><div class="stage-bar-track"><div class="stage-bar-fill" style="width:88%;background:#ff1744;"></div></div><div class="stage-bar-lbl">88% Risk</div></div><div class="stage-val" style="color:var(--red);">High</div></div>
+      <div class="stage-item"><div class="stage-num" style="color:var(--red);">⚠</div><div class="stage-body"><div class="stage-name">DataStream Ltd — $152K</div><div class="stage-detail">Risk Score: 73 · Last Activity: 9 Days Ago · Rep: Omar Shaikh</div></div><div class="stage-bar-wrap"><div class="stage-bar-track"><div class="stage-bar-fill" style="width:73%;background:#ff1744;"></div></div><div class="stage-bar-lbl">73% Risk</div></div><div class="stage-val" style="color:var(--red);">High</div></div>
+      <div class="stage-item"><div class="stage-num" style="color:var(--amber);">!</div><div class="stage-body"><div class="stage-name">Gulf Dynamics — $198K</div><div class="stage-detail">Risk Score: 41 · Last Activity: 4 Days Ago · Rep: Fatima Malik</div></div><div class="stage-bar-wrap"><div class="stage-bar-track"><div class="stage-bar-fill" style="width:41%;background:#ffab00;"></div></div><div class="stage-bar-lbl">41% Risk</div></div><div class="stage-val" style="color:var(--amber);">Medium</div></div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ════════ PAGE: ACCOUNTS ════════ -->
+  <div class="page" id="pg-accounts">
+   <div class="content">
+    <div class="pg-hero" style="border-left-color:var(--green);">
+      <div class="pg-hero-title">Account Management</div>
+      <div class="pg-hero-sub">Top Accounts By Pipeline Value · Q2 2026</div>
+    </div>
+    <div class="pg-stat-grid">
+      <div class="pg-stat"><div class="pg-stat-val">142</div><div class="pg-stat-lbl">Total Accounts</div></div>
+      <div class="pg-stat"><div class="pg-stat-val" style="color:var(--green);">38</div><div class="pg-stat-lbl">Active Opportunities</div></div>
+      <div class="pg-stat"><div class="pg-stat-val" style="color:var(--amber);">$48K</div><div class="pg-stat-lbl">Avg Deal Size</div></div>
+      <div class="pg-stat"><div class="pg-stat-val" style="color:var(--red);">12</div><div class="pg-stat-lbl">Renewal Risk Accounts</div></div>
+    </div>
+    <div class="sec-hdr">Key Accounts</div>
+    <div class="acct-grid">
+      <div class="acct-card"><div class="acct-name">TechVision Corp</div><div class="acct-meta">Enterprise · North America · Usman Tariq</div><div class="acct-val">$285K</div><div class="acct-stage">Stage: Negotiation · Risk: Low</div></div>
+      <div class="acct-card"><div class="acct-name">Gulf Dynamics</div><div class="acct-meta">Mid-Market · EMEA · Fatima Malik</div><div class="acct-val" style="color:var(--amber);">$198K</div><div class="acct-stage">Stage: Proposal · Risk: Medium</div></div>
+      <div class="acct-card"><div class="acct-name">Nexara Solutions</div><div class="acct-meta">Enterprise · North America · Ayesha Siddiqui</div><div class="acct-val">$174K</div><div class="acct-stage">Stage: Qualification · Risk: Low</div></div>
+      <div class="acct-card"><div class="acct-name">DataStream Ltd</div><div class="acct-meta">Mid-Market · APAC · Omar Shaikh</div><div class="acct-val" style="color:var(--red);">$152K</div><div class="acct-stage">Stage: Proposal · Risk: High</div></div>
+      <div class="acct-card"><div class="acct-name">Alpha FinTech</div><div class="acct-meta">SMB · EMEA · Zara Hussain</div><div class="acct-val" style="color:var(--red);">$134K</div><div class="acct-stage">Stage: Negotiation · Risk: High</div></div>
+      <div class="acct-card"><div class="acct-name">Meridian Pharma</div><div class="acct-meta">Enterprise · APAC · Bilal Chaudhry</div><div class="acct-val" style="color:var(--amber);">$118K</div><div class="acct-stage">Stage: Discovery · Risk: Medium</div></div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ════════ PAGE: REP PERFORMANCE ════════ -->
+  <div class="page" id="pg-repperf">
+   <div class="content">
+    <div class="pg-hero" style="border-left-color:var(--green);">
+      <div class="pg-hero-title">Rep Performance</div>
+      <div class="pg-hero-sub">Individual Seller Analytics · Q2 2026</div>
+    </div>
+    <div class="pg-stat-grid">
+      <div class="pg-stat"><div class="pg-stat-val" style="color:var(--green);">4</div><div class="pg-stat-lbl">Reps On Track</div></div>
+      <div class="pg-stat"><div class="pg-stat-val" style="color:var(--amber);">2</div><div class="pg-stat-lbl">Reps At Risk</div></div>
+      <div class="pg-stat"><div class="pg-stat-val" style="color:var(--red);">2</div><div class="pg-stat-lbl">Reps Behind</div></div>
+      <div class="pg-stat"><div class="pg-stat-val">87%</div><div class="pg-stat-lbl">Blended Win Rate</div></div>
+    </div>
+    <div class="sec-hdr">Individual Rep Breakdown</div>
+    <div class="panel">
+      <div class="tbl-controls">
+        <input class="srch" type="text" placeholder="Search reps..." id="perfSearch" oninput="filterPerfTable()">
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="dtbl">
+          <thead><tr>
+            <th>#</th><th>Rep Name</th><th>Region</th>
+            <th>Revenue</th><th>Win Rate</th><th>Deals Won</th><th>Avg Cycle</th><th>Status</th>
+          </tr></thead>
+          <tbody id="perfTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ════════ PAGE: WIN/LOSS ════════ -->
+  <div class="page" id="pg-winloss">
+   <div class="content">
+    <div class="pg-hero" style="border-left-color:var(--red);">
+      <div class="pg-hero-title">Win / Loss Analysis</div>
+      <div class="pg-hero-sub">Deal Outcome Diagnostics · Q2 2026</div>
+    </div>
+    <div class="pg-stat-grid">
+      <div class="pg-stat"><div class="pg-stat-val" style="color:var(--green);">58</div><div class="pg-stat-lbl">Deals Won</div></div>
+      <div class="pg-stat"><div class="pg-stat-val" style="color:var(--red);">41</div><div class="pg-stat-lbl">Deals Lost</div></div>
+      <div class="pg-stat"><div class="pg-stat-val" style="color:var(--amber);">58%</div><div class="pg-stat-lbl">Overall Win Rate</div></div>
+      <div class="pg-stat"><div class="pg-stat-val">$48K</div><div class="pg-stat-lbl">Avg Won Deal Size</div></div>
+    </div>
+    <div class="g12" style="margin-top:0;">
+      <div class="c6">
+        <div class="sec-hdr">Recent Wins</div>
+        <div class="stage-list">
+          <div class="wl-row" style="padding:12px 16px;border-bottom:1px solid var(--border);"><div style="flex:1;"><div class="wl-name">TechVision Corp</div><div class="wl-reason">Superior integration capabilities</div></div><div class="wl-val" style="color:var(--green);">+$285K</div></div>
+          <div class="wl-row" style="padding:12px 16px;border-bottom:1px solid var(--border);"><div style="flex:1;"><div class="wl-name">Nexara Solutions</div><div class="wl-reason">Pricing &amp; executive relationship</div></div><div class="wl-val" style="color:var(--green);">+$174K</div></div>
+          <div class="wl-row" style="padding:12px 16px;border-bottom:1px solid var(--border);"><div style="flex:1;"><div class="wl-name">DataStream Ltd</div><div class="wl-reason">Product fit &amp; fast implementation</div></div><div class="wl-val" style="color:var(--green);">+$152K</div></div>
+          <div class="wl-row" style="padding:12px 16px;"><div style="flex:1;"><div class="wl-name">Meridian Pharma</div><div class="wl-reason">Compliance &amp; security posture</div></div><div class="wl-val" style="color:var(--green);">+$118K</div></div>
+        </div>
+      </div>
+      <div class="c6">
+        <div class="sec-hdr">Recent Losses</div>
+        <div class="stage-list">
+          <div class="wl-row" style="padding:12px 16px;border-bottom:1px solid var(--border);"><div style="flex:1;"><div class="wl-name">Apex Ventures</div><div class="wl-reason">No decision — budget freeze</div></div><div class="wl-val" style="color:var(--red);">-$210K</div></div>
+          <div class="wl-row" style="padding:12px 16px;border-bottom:1px solid var(--border);"><div style="flex:1;"><div class="wl-name">Sigma Networks</div><div class="wl-reason">Lost to competitor on pricing</div></div><div class="wl-val" style="color:var(--red);">-$180K</div></div>
+          <div class="wl-row" style="padding:12px 16px;border-bottom:1px solid var(--border);"><div style="flex:1;"><div class="wl-name">Falcon Systems</div><div class="wl-reason">Champion left the company</div></div><div class="wl-val" style="color:var(--red);">-$143K</div></div>
+          <div class="wl-row" style="padding:12px 16px;"><div style="flex:1;"><div class="wl-name">Metro Analytics</div><div class="wl-reason">No executive sponsorship</div></div><div class="wl-val" style="color:var(--red);">-$98K</div></div>
+        </div>
+      </div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ════════ PAGE: TERRITORY ════════ -->
+  <div class="page" id="pg-territory">
+   <div class="content">
+    <div class="pg-hero" style="border-left-color:var(--amber);">
+      <div class="pg-hero-title">Territory View</div>
+      <div class="pg-hero-sub">Regional Performance Breakdown · Q2 2026</div>
+    </div>
+    <div class="pg-stat-grid">
+      <div class="pg-stat"><div class="pg-stat-val" style="color:var(--green);">NA</div><div class="pg-stat-lbl">Top Region</div></div>
+      <div class="pg-stat"><div class="pg-stat-val" style="color:var(--red);">LATAM</div><div class="pg-stat-lbl">Underperforming</div></div>
+      <div class="pg-stat"><div class="pg-stat-val">4</div><div class="pg-stat-lbl">Active Territories</div></div>
+      <div class="pg-stat"><div class="pg-stat-val" style="color:var(--amber);">61%</div><div class="pg-stat-lbl">LATAM Quota Attainment</div></div>
+    </div>
+    <div class="sec-hdr">Regional Breakdown</div>
+    <div class="territory-row">
+      <div class="terr-card"><div class="terr-name">🌎 North America</div><div class="terr-stat"><div class="terr-stat-lbl">Revenue</div><div class="terr-stat-val" style="color:var(--green);">$3.2M</div></div><div class="terr-stat"><div class="terr-stat-lbl">Quota Attainment</div><div class="terr-stat-val">96%</div></div><div class="terr-bar-t"><div class="terr-bar-f" style="width:96%;background:var(--green);"></div></div><div class="terr-stat"><div class="terr-stat-lbl">Win Rate</div><div class="terr-stat-val">65%</div></div><div class="terr-stat"><div class="terr-stat-lbl">Active Deals</div><div class="terr-stat-val">14</div></div></div>
+      <div class="terr-card"><div class="terr-name">🌍 EMEA</div><div class="terr-stat"><div class="terr-stat-lbl">Revenue</div><div class="terr-stat-val" style="color:var(--green);">$2.4M</div></div><div class="terr-stat"><div class="terr-stat-lbl">Quota Attainment</div><div class="terr-stat-val">88%</div></div><div class="terr-bar-t"><div class="terr-bar-f" style="width:88%;background:var(--amber);"></div></div><div class="terr-stat"><div class="terr-stat-lbl">Win Rate</div><div class="terr-stat-val">61%</div></div><div class="terr-stat"><div class="terr-stat-lbl">Active Deals</div><div class="terr-stat-val">11</div></div></div>
+      <div class="terr-card"><div class="terr-name">🌏 APAC</div><div class="terr-stat"><div class="terr-stat-lbl">Revenue</div><div class="terr-stat-val" style="color:var(--amber);">$1.8M</div></div><div class="terr-stat"><div class="terr-stat-lbl">Quota Attainment</div><div class="terr-stat-val" style="color:var(--amber);">74%</div></div><div class="terr-bar-t"><div class="terr-bar-f" style="width:74%;background:var(--amber);"></div></div><div class="terr-stat"><div class="terr-stat-lbl">Win Rate</div><div class="terr-stat-val">48%</div></div><div class="terr-stat"><div class="terr-stat-lbl">Active Deals</div><div class="terr-stat-val">9</div></div></div>
+      <div class="terr-card"><div class="terr-name">🌎 LATAM</div><div class="terr-stat"><div class="terr-stat-lbl">Revenue</div><div class="terr-stat-val" style="color:var(--red);">$1.0M</div></div><div class="terr-stat"><div class="terr-stat-lbl">Quota Attainment</div><div class="terr-stat-val" style="color:var(--red);">61%</div></div><div class="terr-bar-t"><div class="terr-bar-f" style="width:61%;background:var(--red);"></div></div><div class="terr-stat"><div class="terr-stat-lbl">Win Rate</div><div class="terr-stat-val">38%</div></div><div class="terr-stat"><div class="terr-stat-lbl">Active Deals</div><div class="terr-stat-val">4</div></div></div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ════════ PAGE: INTEGRATIONS ════════ -->
+  <div class="page" id="pg-integrations">
+   <div class="content">
+    <div class="pg-hero" style="border-left-color:var(--blue);">
+      <div class="pg-hero-title">Integrations</div>
+      <div class="pg-hero-sub">Connected Data Sources &amp; API Connections</div>
+    </div>
+    <div class="sec-hdr">Connected Platforms</div>
+    <div class="intg-grid">
+      <div class="intg-card"><div class="intg-icon">☁️</div><div class="intg-name">Salesforce CRM</div><div class="intg-desc">Opportunity sync, rep activity, stage data</div><span class="intg-status intg-on">Connected</span></div>
+      <div class="intg-card"><div class="intg-icon">📊</div><div class="intg-name">HubSpot</div><div class="intg-desc">Contact intelligence, email engagement data</div><span class="intg-status intg-on">Connected</span></div>
+      <div class="intg-card"><div class="intg-icon">🎯</div><div class="intg-name">Gong.io</div><div class="intg-desc">Call transcripts, NLP competitor mention detection</div><span class="intg-status intg-on">Connected</span></div>
+      <div class="intg-card"><div class="intg-icon">🔮</div><div class="intg-name">6sense</div><div class="intg-desc">Third-party intent data, account signals</div><span class="intg-status intg-on">Connected</span></div>
+      <div class="intg-card"><div class="intg-icon">📈</div><div class="intg-name">Clari</div><div class="intg-desc">AI forecast scoring, pipeline risk analysis</div><span class="intg-status intg-off">Not Connected</span></div>
+      <div class="intg-card"><div class="intg-icon">💳</div><div class="intg-name">Stripe</div><div class="intg-desc">Payment data, MRR, churn tracking</div><span class="intg-status intg-off">Not Connected</span></div>
+      <div class="intg-card"><div class="intg-icon">📧</div><div class="intg-name">Outreach</div><div class="intg-desc">Sequence analytics, cadence performance</div><span class="intg-status intg-on">Connected</span></div>
+      <div class="intg-card"><div class="intg-icon">🗂️</div><div class="intg-name">Bombora</div><div class="intg-desc">Intent data, buying signal aggregation</div><span class="intg-status intg-off">Not Connected</span></div>
+      <div class="intg-card"><div class="intg-icon">🔗</div><div class="intg-name">LinkedIn Sales Nav</div><div class="intg-desc">Contact intelligence, engagement signals</div><span class="intg-status intg-on">Connected</span></div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ════════ PAGE: PREFERENCES ════════ -->
+  <div class="page" id="pg-preferences">
+   <div class="content">
+    <div class="pg-hero" style="border-left-color:var(--muted);">
+      <div class="pg-hero-title">Preferences</div>
+      <div class="pg-hero-sub">Dashboard Configuration &amp; Display Settings</div>
+    </div>
+    <div class="pref-blk">
+      <div class="pref-blk-title">Display Settings</div>
+      <div class="pref-row"><div class="pref-lbl">Default Date Range</div><select class="fsel" style="min-width:140px;"><option>Q2 2026</option><option>Q1 2026</option><option>YTD 2026</option></select></div>
+      <div class="pref-row"><div class="pref-lbl">Default Region</div><select class="fsel" style="min-width:140px;"><option>All Regions</option><option>North America</option><option>EMEA</option><option>APAC</option></select></div>
+      <div class="pref-row"><div class="pref-lbl">Currency</div><select class="fsel" style="min-width:140px;"><option>USD ($)</option><option>EUR (€)</option><option>GBP (£)</option></select></div>
+    </div>
+    <div class="pref-blk">
+      <div class="pref-blk-title">Notification Settings</div>
+      <div class="pref-row"><div class="pref-lbl">Deal Risk Alerts</div><div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div></div>
+      <div class="pref-row"><div class="pref-lbl">Quota Attainment Warnings</div><div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div></div>
+      <div class="pref-row"><div class="pref-lbl">Weekly Summary Email</div><div class="toggle" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div></div>
+      <div class="pref-row"><div class="pref-lbl">Pipeline Stall Alerts</div><div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div></div>
+    </div>
+    <div class="pref-blk">
+      <div class="pref-blk-title">Account Info</div>
+      <div class="pref-row"><div class="pref-lbl">Name</div><div class="pref-val">Chief Executive</div></div>
+      <div class="pref-row"><div class="pref-lbl">Role</div><div class="pref-val">Executive — Read Only</div></div>
+      <div class="pref-row"><div class="pref-lbl">Organization</div><div class="pref-val">Revenue Intelligence Corp</div></div>
+      <div class="pref-row"><div class="pref-lbl">Dashboard Version</div><div class="pref-val" style="color:var(--green);">V3.0 — Q2 2026</div></div>
+    </div>
+   </div>
+  </div>
+
+</div><!-- /main-wrap -->
+
+<script>
+"use strict";
+
+/* ══════════════════════════════════════════
+   DATA
+══════════════════════════════════════════ */
+const REPS = [
+  { name:"Usman Tariq",     region:"NA",    initials:"UT", color:"#00e676", revenue:1240000, winRate:68, pipeline:2100000, status:"on-track", deals:18, cycle:28 },
+  { name:"Fatima Malik",    region:"EMEA",  initials:"FM", color:"#448aff", revenue:1180000, winRate:72, pipeline:1850000, status:"on-track", deals:16, cycle:24 },
+  { name:"Bilal Chaudhry",  region:"APAC",  initials:"BC", color:"#ffab00", revenue:980000,  winRate:51, pipeline:1420000, status:"at-risk",  deals:12, cycle:42 },
+  { name:"Ayesha Siddiqui", region:"NA",    initials:"AS", color:"#00e676", revenue:920000,  winRate:64, pipeline:1680000, status:"on-track", deals:14, cycle:31 },
+  { name:"Hamza Qureshi",   region:"LATAM", initials:"HQ", color:"#ff1744", revenue:740000,  winRate:38, pipeline:980000,  status:"behind",   deals:8,  cycle:61 },
+  { name:"Zara Hussain",    region:"EMEA",  initials:"ZH", color:"#ffab00", revenue:860000,  winRate:59, pipeline:1230000, status:"at-risk",  deals:11, cycle:38 },
+  { name:"Omar Shaikh",     region:"NA",    initials:"OS", color:"#00e676", revenue:1050000, winRate:63, pipeline:1900000, status:"on-track", deals:15, cycle:29 },
+  { name:"Nadia Rehman",    region:"APAC",  initials:"NR", color:"#448aff", revenue:680000,  winRate:44, pipeline:870000,  status:"behind",   deals:7,  cycle:55 },
+];
+
+const WINS = [
+  { company:"TechVision Corp",   rep:"Usman Tariq",     value:285000, days:2,  emoji:"🏢" },
+  { company:"Gulf Dynamics",     rep:"Fatima Malik",    value:198000, days:4,  emoji:"⚙️" },
+  { company:"Nexara Solutions",  rep:"Ayesha Siddiqui", value:174000, days:6,  emoji:"🚀" },
+  { company:"DataStream Ltd",    rep:"Omar Shaikh",     value:152000, days:8,  emoji:"📡" },
+  { company:"Alpha FinTech",     rep:"Zara Hussain",    value:134000, days:11, emoji:"💳" },
+  { company:"Meridian Pharma",   rep:"Bilal Chaudhry",  value:118000, days:14, emoji:"💊" },
+];
+
+const MONTHS       = ["JAN","FEB","MAR","APR","MAY","JUN"];
+const ACTUAL_DATA  = [980, 1120, 1340, 1290, 1580, 1720];
+const FORECAST_DATA= [1050,1200, 1350, 1450, 1600, 1800];
+const COMMIT_DATA  = [940, 1080, 1300, 1250, 1520, 1660];
+const BESTCASE_DATA= [1100,1280, 1420, 1520, 1680, 1900];
+
+/* ══════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════ */
+function navTo(pageId, el) {
+  try {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const pg = document.getElementById(pageId);
+    if (!pg) throw new Error('Page ' + pageId + ' not found');
+    pg.classList.add('active');
+    if (el) el.classList.add('active');
+    // Lazy-init charts on first visit
+    if (pageId === 'pg-forecasting' && !window._forecastInit) { initForecastChart(); window._forecastInit = true; }
+  } catch(e) { console.error('[Nav]', e.message); }
+}
+
+/* ══════════════════════════════════════════
+   SIDEBAR TOGGLE
+══════════════════════════════════════════ */
+let _sbOpen = true;
+function toggleSidebar() {
+  try {
+    _sbOpen = !_sbOpen;
+    const sb  = document.getElementById('sidebar');
+    const mw  = document.getElementById('mainWrap');
+    const btn = document.getElementById('sbToggle');
+    if (!sb || !mw) throw new Error('Sidebar elements missing');
+    sb.classList.toggle('collapsed', !_sbOpen);
+    mw.classList.toggle('sb-collapsed', !_sbOpen);
+    if (btn) btn.textContent = _sbOpen ? '◀' : '▶';
+  } catch(e) { console.error('[Sidebar]', e.message); }
+}
+
+/* ══════════════════════════════════════════
+   STRUCT MAP TABS
+══════════════════════════════════════════ */
+function switchTab(id, btn) {
+  try {
+    document.querySelectorAll('.spanel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.stab').forEach(b => b.classList.remove('active'));
+    const t = document.getElementById('tab-' + id);
+    if (!t) throw new Error('Tab panel tab-' + id + ' not found');
+    t.classList.add('active');
+    if (btn) btn.classList.add('active');
+  } catch(e) { console.error('[Tab]', e.message); }
+}
+
+/* ══════════════════════════════════════════
+   CHART: REVENUE LINE
+══════════════════════════════════════════ */
+(function initRevenueChart() {
+  try {
+    const canvas = document.getElementById('revenueChart');
+    if (!canvas) throw new Error('Canvas #revenueChart not found');
+    if (typeof Chart === 'undefined') throw new Error('Chart.js not loaded');
+
+    new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: MONTHS,
+        datasets: [
+          {
+            label: 'Actual Revenue ($K)',
+            data: ACTUAL_DATA,
+            borderColor: '#00e676',
+            backgroundColor: 'rgba(0,230,118,0.10)',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#00e676',
+            pointBorderColor: '#000',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            fill: true,
+            tension: 0.4,
+          },
+          {
+            label: 'Forecast ($K)',
+            data: FORECAST_DATA,
+            borderColor: '#ff1744',
+            backgroundColor: 'transparent',
+            borderWidth: 1.5,
+            borderDash: [6,4],
+            pointRadius: 3,
+            pointBackgroundColor: '#ff1744',
+            pointBorderColor: '#000',
+            pointBorderWidth: 2,
+            pointHoverRadius: 5,
+            tension: 0.4,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#111',
+            borderColor: 'rgba(255,255,255,0.12)',
+            borderWidth: 1,
+            titleColor: '#666',
+            bodyColor: '#fff',
+            titleFont: { family: 'Calibri,sans-serif', size: 10, weight: 'bold' },
+            bodyFont: { family: 'Calibri,sans-serif', size: 11, weight: 'bold' },
+            padding: 12,
+            callbacks: { label: ctx => ' $' + ctx.parsed.y.toLocaleString() + 'K' }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            ticks: { color: '#555', font: { family: 'Calibri,sans-serif', size: 10, weight: 'bold' } },
+            border: { color: 'rgba(255,255,255,0.06)' }
+          },
+          y: {
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            ticks: { color: '#555', font: { family: 'Calibri,sans-serif', size: 10, weight: 'bold' }, callback: v => '$' + v + 'K' },
+            border: { color: 'rgba(255,255,255,0.06)' }
+          }
+        }
+      }
+    });
+  } catch(err) {
+    console.error('[Revenue Chart]', err.message);
+    const el = document.getElementById('revenueChart');
+    if (el) el.parentElement.innerHTML = '<p style="color:#ff1744;font-family:Calibri,sans-serif;font-size:12px;font-weight:bold;padding:20px;text-align:center;">Chart error: ' + err.message + '</p>';
+  }
+})();
+
+/* ══════════════════════════════════════════
+   CHART: FORECAST (lazy)
+══════════════════════════════════════════ */
+function initForecastChart() {
+  try {
+    const canvas = document.getElementById('forecastChart');
+    if (!canvas) throw new Error('Canvas #forecastChart not found');
+    new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: MONTHS,
+        datasets: [
+          { label:'Actual',    data:ACTUAL_DATA,   borderColor:'#00e676', backgroundColor:'rgba(0,230,118,0.08)', fill:true, tension:0.4, borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#00e676', pointBorderColor:'#000', pointBorderWidth:2 },
+          { label:'Commit',    data:COMMIT_DATA,   borderColor:'#ffab00', backgroundColor:'transparent', tension:0.4, borderWidth:1.5, borderDash:[4,3], pointRadius:3, pointBackgroundColor:'#ffab00', pointBorderColor:'#000', pointBorderWidth:1 },
+          { label:'Best Case', data:BESTCASE_DATA, borderColor:'#448aff', backgroundColor:'transparent', tension:0.4, borderWidth:1.5, borderDash:[2,2], pointRadius:3, pointBackgroundColor:'#448aff', pointBorderColor:'#000', pointBorderWidth:1 },
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        interaction:{ mode:'index', intersect:false },
+        plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#111', borderColor:'rgba(255,255,255,0.12)', borderWidth:1, titleColor:'#666', bodyColor:'#fff', titleFont:{family:'Calibri,sans-serif',size:10,weight:'bold'}, bodyFont:{family:'Calibri,sans-serif',size:11,weight:'bold'}, padding:12, callbacks:{ label: ctx => ' $' + ctx.parsed.y.toLocaleString() + 'K' } } },
+        scales:{
+          x:{ grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#555',font:{family:'Calibri,sans-serif',size:10,weight:'bold'}}, border:{color:'rgba(255,255,255,0.06)'} },
+          y:{ grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#555',font:{family:'Calibri,sans-serif',size:10,weight:'bold'},callback:v=>'$'+v+'K'}, border:{color:'rgba(255,255,255,0.06)'} }
+        }
+      }
+    });
+  } catch(err) { console.error('[Forecast Chart]', err.message); }
+}
+
+/* ══════════════════════════════════════════
+   ACTIVITY FEED
+══════════════════════════════════════════ */
+(function renderFeed() {
+  try {
+    const c = document.getElementById('feedList');
+    if (!c) throw new Error('feedList not found');
+    c.innerHTML = WINS.map(w => `
+      <div class="feed-item">
+        <div class="feed-ico" style="background:rgba(0,230,118,0.12);">${w.emoji}</div>
+        <div class="feed-body">
+          <div class="feed-co">${w.company}</div>
+          <div class="feed-rep">${w.rep}</div>
+        </div>
+        <div>
+          <div class="feed-val">$${(w.value/1000).toFixed(0)}K</div>
+          <div class="feed-age">${w.days}D AGO</div>
+        </div>
+      </div>`).join('');
+  } catch(e) { console.error('[Feed]', e.message); }
+})();
+
+/* ══════════════════════════════════════════
+   REP TABLE
+══════════════════════════════════════════ */
+let _sortCol = 2, _sortAsc = false, _cur = [...REPS];
+
+function wrColor(p) { return p >= 60 ? '#00e676' : p >= 45 ? '#ffab00' : '#ff1744'; }
+function fmtM(v)    { return '$' + (v/1e6).toFixed(2) + 'M'; }
+function fmtPipe(v) { return '$' + (v/1e6).toFixed(1) + 'M'; }
+
+const STATUS_HTML = {
+  'on-track':'<span class="tag tag-go">On Track</span>',
+  'at-risk':'<span class="tag tag-risk">At Risk</span>',
+  'behind':'<span class="tag tag-behind">Behind</span>',
+};
+const RANK_COLORS = ['#ffab00','#aaaaaa','#b87333'];
+
+function renderTable(data) {
+  try {
+    const body = document.getElementById('repTableBody');
+    const cnt  = document.getElementById('rowCount');
+    if (!body) throw new Error('repTableBody not found');
+    body.innerHTML = data.map((r,i) => {
+      const wc  = wrColor(r.winRate);
+      const rbg = i < 3 ? RANK_COLORS[i] : '#1a1a1a';
+      const rtx = i < 3 ? '#000' : '#666';
+      return `<tr>
+        <td><div class="rk-b" style="background:${rbg};color:${rtx};">${i+1}</div></td>
+        <td><div class="rep-row"><div class="rep-av" style="background:${r.color};">${r.initials}</div><div><div class="rep-nm">${r.name}</div><div class="rep-rg">${r.region}</div></div></div></td>
+        <td><div class="rev-c">${fmtM(r.revenue)}</div></td>
+        <td><div class="wr-wrap"><div class="wr-track"><div class="wr-fill" style="width:${r.winRate}%;background:${wc};"></div></div><span class="wr-pct" style="color:${wc};">${r.winRate}%</span></div></td>
+        <td><span class="pip-v">${fmtPipe(r.pipeline)}</span></td>
+        <td style="font-family:var(--font);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);">${r.region}</td>
+        <td>${STATUS_HTML[r.status]||''}</td>
+      </tr>`;
+    }).join('');
+    if (cnt) cnt.textContent = data.length;
+  } catch(e) { console.error('[Table render]', e.message); }
+}
+
+function sortTable(col) {
+  try {
+    _sortAsc = (_sortCol === col) ? !_sortAsc : col !== 2;
+    _sortCol = col;
+    const fields = [null,'name','revenue','winRate','pipeline','region'];
+    const f = fields[col];
+    const s = [..._cur].sort((a,b) => {
+      const va = a[f], vb = b[f];
+      const cmp = typeof va === 'string' ? va.localeCompare(vb) : va - vb;
+      return _sortAsc ? cmp : -cmp;
+    });
+    document.querySelectorAll('.dtbl th').forEach((th,i) => {
+      th.classList.toggle('sorted', i === col);
+      const sa = th.querySelector('.sa');
+      if (sa) sa.textContent = i === col ? (_sortAsc ? '↑' : '↓') : '↕';
+    });
+    renderTable(s);
+  } catch(e) { console.error('[Sort]', e.message); }
+}
+
+function filterTable() {
+  try {
+    const q  = (document.getElementById('repSearch')?.value || '').toLowerCase().trim();
+    const st = document.getElementById('statusFilter')?.value || 'all';
+    const rg = document.getElementById('regionFilter')?.value || 'all';
+    _cur = REPS.filter(r => {
+      const ms = !q || r.name.toLowerCase().includes(q) || r.region.toLowerCase().includes(q);
+      const mst = st === 'all' || r.status === st;
+      const mrg = rg === 'all' || r.region.toLowerCase() === rg;
+      return ms && mst && mrg;
+    });
+    renderTable(_cur);
+  } catch(e) { console.error('[Filter]', e.message); }
+}
+function applyFilters() { try { filterTable(); } catch(e) { console.error('[ApplyFilters]', e.message); } }
+
+renderTable(REPS);
+
+/* ══════════════════════════════════════════
+   PERF TABLE (Rep Performance page)
+══════════════════════════════════════════ */
+(function renderPerfTable() {
+  try {
+    const body = document.getElementById('perfTableBody');
+    if (!body) throw new Error('perfTableBody not found');
+    body.innerHTML = REPS.map((r,i) => {
+      const wc = wrColor(r.winRate);
+      return `<tr>
+        <td><div class="rk-b" style="background:${i<3?RANK_COLORS[i]:'#1a1a1a'};color:${i<3?'#000':'#666'};">${i+1}</div></td>
+        <td><div class="rep-row"><div class="rep-av" style="background:${r.color};">${r.initials}</div><div><div class="rep-nm">${r.name}</div></div></div></td>
+        <td style="font-family:var(--font);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);">${r.region}</td>
+        <td><div class="rev-c">${fmtM(r.revenue)}</div></td>
+        <td><div class="wr-wrap"><div class="wr-track"><div class="wr-fill" style="width:${r.winRate}%;background:${wc};"></div></div><span class="wr-pct" style="color:${wc};">${r.winRate}%</span></div></td>
+        <td style="font-family:var(--font);font-size:12px;font-weight:700;color:var(--white);">${r.deals}</td>
+        <td style="font-family:var(--font);font-size:12px;font-weight:700;color:var(--amber);">${r.cycle}d</td>
+        <td>${STATUS_HTML[r.status]||''}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) { console.error('[PerfTable]', e.message); }
+})();
+
+function filterPerfTable() {
+  try {
+    const q = (document.getElementById('perfSearch')?.value || '').toLowerCase().trim();
+    const body = document.getElementById('perfTableBody');
+    if (!body) return;
+    body.innerHTML = REPS.filter(r => !q || r.name.toLowerCase().includes(q) || r.region.toLowerCase().includes(q))
+      .map((r,i) => {
+        const wc = wrColor(r.winRate);
+        return `<tr>
+          <td><div class="rk-b" style="background:${i<3?RANK_COLORS[i]:'#1a1a1a'};color:${i<3?'#000':'#666'};">${i+1}</div></td>
+          <td><div class="rep-row"><div class="rep-av" style="background:${r.color};">${r.initials}</div><div><div class="rep-nm">${r.name}</div></div></div></td>
+          <td style="font-family:var(--font);font-size:10px;font-weight:700;text-transform:uppercase;color:var(--muted);">${r.region}</td>
+          <td><div class="rev-c">${fmtM(r.revenue)}</div></td>
+          <td><div class="wr-wrap"><div class="wr-track"><div class="wr-fill" style="width:${r.winRate}%;background:${wc};"></div></div><span class="wr-pct" style="color:${wc};">${r.winRate}%</span></div></td>
+          <td style="font-family:var(--font);font-size:12px;font-weight:700;color:var(--white);">${r.deals}</td>
+          <td style="font-family:var(--font);font-size:12px;font-weight:700;color:var(--amber);">${r.cycle}d</td>
+          <td>${STATUS_HTML[r.status]||''}</td>
+        </tr>`;
+      }).join('');
+  } catch(e) { console.error('[PerfFilter]', e.message); }
+}
+
+/* ══════════════════════════════════════════
+   EXPORT
+══════════════════════════════════════════ */
+function exportReport() {
+  try {
+    const blob = new Blob([document.documentElement.outerHTML], { type:'text/html;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = 'Sales_Intelligence_Dashboard_Q2_2026.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    console.error('[Export]', e.message);
+    alert('Export failed: ' + e.message);
+  }
+}
+</script>
+</body>
+</html>
